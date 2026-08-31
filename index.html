@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binaural OneVone Tools</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      margin: 0;
+      font-family: sans-serif;
+      height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .mode-tab-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #2a2a2a;
+      padding: 4px;
+      border-radius: 20px;
+      border: 1px solid #444;
+      display: flex;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #888;
+      padding: 8px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background-color: #00bcd4;
+      color: #000;
+      box-shadow: 0 2px 8px rgba(0, 188, 212, 0.4);
+    }
+
+    .view-section {
+      display: none;
+      text-align: center;
+      margin-top: 75px;
+      padding-bottom: 120px;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    .audio-flow-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background-color: #1a1a1a;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid #333;
+      margin: 10px 0;
+    }
+
+    .flow-block {
+      background-color: #2b2b2b;
+      border: 2px solid #3a3a3a;
+      border-radius: 8px;
+      width: 150px;
+      height: 90px;
+      padding: 8px 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .flow-title {
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .flow-info {
+      color: #aaa;
+      font-size: 11px;
+      line-height: 1.3;
+      font-family: monospace;
+    }
+
+    .flow-arrow {
+      color: #00bcd4;
+      font-size: 18px;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    .spatial-canvas-container {
+      margin: 10px auto;
+      width: 380px;
+      height: 380px;
+      background-color: #262626;
+      border: 3px solid #1a1a1a;
+      border-radius: 16px;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 8px 24px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    #spatial-canvas {
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+      border-radius: 13px;
+    }
+
+    .island-footer {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #2a2a2a;
+      padding: 12px 24px;
+      border-radius: 30px;
+      border: 1px solid #444;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .footer-group {
+      display: none;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .footer-group.active {
+      display: flex;
+    }
+
+    .island-footer input {
+      background: #1a1a1a;
+      border: 1px solid #555;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 15px;
+    }
+
+    .island-footer button {
+      background: #3a3a3a;
+      border: 1px solid #555;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .island-footer button:hover {
+      border-color: #00bcd4;
+    }
+
+    .island-footer button.btn-primary {
+      background: #ff6b00;
+      border: none;
+    }
+
+    .island-footer button.btn-danger {
+      background: #e53935;
+      border: none;
+    }
+
+    .bottom-panel {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 100%);
+      transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      width: 90%;
+      max-width: 550px;
+      max-height: 80vh;
+      overflow-y: auto;
+      background-color: #2b2b2b;
+      border: 3px solid #1a1a1a;
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 24px;
+      box-sizing: border-box;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+    }
+
+    .bottom-panel.show {
+      transform: translate(-50%, 0);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .btn-close {
+      background: #ff6b00;
+      border: none;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .setting-card {
+      background-color: #333333;
+      border: 3px solid #1a1a1a;
+      border-radius: 8px;
+      padding: 12px 16px;
+      width: 100%;
+      box-sizing: border-box;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    .setting-input, .setting-select {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #555;
+      color: #fff;
+      padding: 8px;
+      border-radius: 6px;
+      box-sizing: border-box;
+      margin-top: 4px;
+    }
+
+    .section-label {
+      font-size: 13px;
+      color: #00bcd4;
+      margin: 18px 0 8px 0;
+      font-weight: bold;
+      text-align: left;
+      border-bottom: 1px solid #444;
+      padding-bottom: 4px;
+    }
+
+    .debug-box {
+      background: #111;
+      border: 1px solid #444;
+      color: #0f0;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 8px;
+      height: 90px;
+      overflow-y: auto;
+      text-align: left;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mode-tab-container">
+    <button class="tab-btn active" id="tab-send">配信 (ホスト)</button>
+    <button class="tab-btn" id="tab-recv">受信 (クライアント)</button>
+  </div>
+
+  <!-- 配信画面エリア -->
+  <div class="view-section active" id="view-send">
+    <div class="audio-flow-container">
+      <div class="flow-block">
+        <div class="flow-title">マイク入力</div>
+        <div class="flow-info" id="info-input-device">Default Mic</div>
+      </div>
+      <div class="flow-arrow">▶</div>
+      <div class="flow-block">
+        <div class="flow-title">音響エフェクト</div>
+        <div class="flow-info">
+          <span id="info-3d">3D: ON</span><br>
+          <span id="info-passthrough" style="color:#00bcd4;">Binaural</span>
+        </div>
+      </div>
+      <div class="flow-arrow">▶</div>
+      <div class="flow-block">
+        <div class="flow-title">接続ステータス</div>
+        <div class="flow-info">
+          status: <span id="flow-status" style="color:#ff6b00;">OFFLINE</span><br>
+          WebRTC P2P
+        </div>
+      </div>
+    </div>
+
+    <div class="spatial-canvas-container">
+      <canvas id="spatial-canvas" width="380" height="380"></canvas>
+    </div>
+  </div>
+
+  <!-- 受信画面エリア -->
+  <div class="view-section" id="view-recv">
+    <h2>受信モード</h2>
+    <p style="color: #888;">発行された接続コード(viwekey)を入力して接続するゾ</p>
+  </div>
+
+  <!-- 島フッター -->
+  <footer class="island-footer">
+    <div class="footer-group active" id="footer-send">
+      <button id="btn-gen-key">キー発行</button>
+      <button id="btn-mic-toggle">Mic ON</button>
+      <button id="btn-pause-toggle">一時停止</button>
+      <button id="btn-set">詳細設定</button>
+      <button id="btn-stream-toggle" class="btn-primary">配信開始</button>
+    </div>
+
+    <div class="footer-group" id="footer-recv">
+      <input type="text" id="input-viewkey" placeholder="viwekeyを入力" style="width: 140px;">
+      <button id="btn-connect-recv" class="btn-primary">接続リクエスト</button>
+      <button id="btn-spk-mute">スピーカー Mute</button>
+      <button id="btn-set-recv">詳細設定</button>
+      <button id="btn-disconnect" class="btn-danger">切断</button>
+    </div>
+  </footer>
+
+  <!-- 詳細設定パネル -->
+  <div class="bottom-panel" id="settings-panel">
+    <div class="panel-header">
+      <span class="panel-title">詳細設定</span>
+      <button class="btn-close" id="close-panel-btn">閉じる</button>
+    </div>
+
+    <div class="panel-content">
+      <div class="section-label">デバイス & 音声基本設定</div>
+      <div class="setting-card">
+        <div class="label">入出力デバイスの選択</div>
+        <select id="select-mic" class="setting-select"><option>デフォルトマイク</option></select>
+      </div>
+      <div class="setting-card">
+        <div class="label">マイク入力ゲイン（マイク音量調整）</div>
+        <input type="range" id="range-gain" min="0" max="2" step="0.05" value="1.0" style="width:100%;">
+      </div>
+      <div class="setting-card">
+        <div class="label">マスター音量</div>
+        <input type="range" id="range-volume" min="0" max="1" step="0.01" value="0.8" style="width:100%;">
+      </div>
+      <div class="setting-card">
+        <div class="label">サンプルレート / レイテンシ設定</div>
+        <select id="select-latency" class="setting-select">
+          <option value="interactive">低遅延 (interactive)</option>
+          <option value="balanced">標準 (balanced)</option>
+          <option value="playback">安定重視 (playback)</option>
+        </select>
+      </div>
+
+      <div class="section-label">疑似バイノーラル & 音響エフェクト</div>
+      <div class="setting-card">
+        <div class="label">立体音響（3D / バイノーラル）</div>
+        <label><input type="checkbox" id="chk-3d" checked> 有効（ITD / HRTF / 距離減衰 / ドップラー）</label>
+      </div>
+      <div class="setting-card">
+        <div class="label">パススルーモード</div>
+        <label><input type="checkbox" id="chk-passthrough"> バイパス（バイノーラル・エフェクト無効化）</label>
+      </div>
+      <div class="setting-card">
+        <div class="label">ルームサイズ（残響の広さ）</div>
+        <input type="range" id="range-room-size" min="0" max="1" step="0.05" value="0.3" style="width:100%;">
+      </div>
+      <div class="setting-card">
+        <div class="label">エコー</div>
+        <input type="range" id="range-echo" min="0" max="0.8" step="0.05" value="0.0" style="width:100%;">
+      </div>
+      <div class="setting-card">
+        <div class="label">ノイズキャンセリング / ノイズゲート</div>
+        <label><input type="checkbox" id="chk-noise" checked> WebAudio フィルタ処理有効</label>
+      </div>
+
+      <div class="section-label">QuickAccent (効果音)</div>
+      <div class="setting-card">
+        <div class="label">アップロードしたmp3の効果音付けるやつ</div>
+        <input type="file" id="file-quickaccent" accept="audio/mp3,audio/*">
+        <button id="btn-play-accent" style="margin-top:8px;">効果音再生</button>
+      </div>
+
+      <div class="section-label">VERYMETA 設定 & デバッグ</div>
+      <div class="setting-card">
+        <div class="label">VERYMETA サーバーアドレス (Renderなどのwss://URLを入力)</div>
+        <input type="text" class="setting-input" id="input-verymeta-addr" value="wss://your-render-app.onrender.com">
+      </div>
+      <div class="setting-card">
+        <div class="label">デバッグ情報</div>
+        <div class="debug-box" id="debug-log">System Ready...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function log(msg) {
+      const box = document.getElementById('debug-log');
+      if (box) {
+        box.innerHTML += `<br>[${new Date().toLocaleTimeString()}] ${msg}`;
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+
+    // --- Web Audio API エンジン ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const inputGain = audioCtx.createGain();
+    const masterGain = audioCtx.createGain();
+    const panner = audioCtx.createPanner();
+    const lowCutFilter = audioCtx.createBiquadFilter();
+    const highCutFilter = audioCtx.createBiquadFilter();
+    const echoDelay = audioCtx.createDelay();
+    const echoFeedback = audioCtx.createGain();
+
+    panner.panningModel = 'HRTF';
+    panner.distanceModel = 'inverse';
+    lowCutFilter.type = 'highpass';
+    highCutFilter.type = 'lowpass';
+
+    echoDelay.delayTime.value = 0.2;
+    echoFeedback.gain.value = 0.0;
+    echoDelay.connect(echoFeedback);
+    echoFeedback.connect(echoDelay);
+
+    function updateAudioPosition(x, z) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const is3D = document.getElementById('chk-3d').checked;
+      const isPass = document.getElementById('chk-passthrough').checked;
+
+      if (isPass || !is3D) {
+        panner.positionX.setValueAtTime(0, audioCtx.currentTime);
+        panner.positionZ.setValueAtTime(0, audioCtx.currentTime);
+        return;
+      }
+
+      panner.positionX.setValueAtTime(x, audioCtx.currentTime);
+      panner.positionY.setValueAtTime(0, audioCtx.currentTime);
+      panner.positionZ.setValueAtTime(z, audioCtx.currentTime);
+
+      const distance = Math.sqrt(x * x + z * z);
+      lowCutFilter.frequency.setValueAtTime(Math.min(300, 20 + distance * 15), audioCtx.currentTime);
+      highCutFilter.frequency.setValueAtTime(Math.max(2000, 20000 - distance * 800), audioCtx.currentTime);
+    }
+
+    // --- WebRTC State ---
+    let pc = null;
+    let dataChannel = null;
+    let localStream = null;
+    let currentRoomKey = "";
+    let wsSignal = null;
+    let isStreaming = false;
+    let isMicOn = true;
+    let isPaused = false;
+    let quickAccentBuffer = null;
+
+    // --- 2D Canvas ---
+    const canvas = document.getElementById('spatial-canvas');
+    const ctx = canvas.getContext('2d');
+    const listener = { x: canvas.width / 2, y: canvas.height / 2 + 50, radius: 16 };
+    let mic = { x: canvas.width / 2, y: canvas.height / 2 - 40, radius: 28 };
+    let isDragging = false;
+
+    function drawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath(); ctx.arc(listener.x, listener.y, listener.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#b3f5ff'; ctx.fill(); ctx.strokeStyle = '#00bcd4'; ctx.lineWidth = 4; ctx.stroke();
+
+      ctx.beginPath(); ctx.arc(mic.x, mic.y, mic.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffb3b3'; ctx.fill(); ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 5; ctx.stroke();
+      ctx.fillStyle = '#000'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('Mic', mic.x, mic.y);
+    }
+
+    function handleMicMove(mouseX, mouseY) {
+      mic.x = mouseX; mic.y = mouseY; drawCanvas();
+      const relX = (mic.x - listener.x) / 20;
+      const relZ = (mic.y - listener.y) / 20;
+      updateAudioPosition(relX, relZ);
+      if (dataChannel && dataChannel.readyState === 'open') {
+        dataChannel.send(JSON.stringify({ x: relX, z: relZ }));
+      }
+    }
+
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    canvas.addEventListener('mousedown', (e) => { if (Math.hypot(getCanvasPos(e).x - mic.x, getCanvasPos(e).y - mic.y) <= mic.radius) isDragging = true; });
+    window.addEventListener('mousemove', (e) => { if (isDragging) handleMicMove(getCanvasPos(e).x, getCanvasPos(e).y); });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    drawCanvas();
+
+    // --- Controls ---
+
+    // 1. キー発行 (6桁)
+    document.getElementById('btn-gen-key').addEventListener('click', () => {
+      currentRoomKey = Math.floor(100000 + Math.random() * 900000).toString();
+      alert(`接続コードを発行したゾ: 【 ${currentRoomKey} 】`);
+      log(`Key generated: ${currentRoomKey}`);
+    });
+
+    // 2. Mic ON / OFF
+    document.getElementById('btn-mic-toggle').addEventListener('click', () => {
+      isMicOn = !isMicOn;
+      if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = isMicOn && !isPaused);
+      document.getElementById('btn-mic-toggle').textContent = isMicOn ? "Mic ON" : "Mic OFF";
+      log(`Mic toggled: ${isMicOn}`);
+    });
+
+    // 3. 一時停止
+    document.getElementById('btn-pause-toggle').addEventListener('click', () => {
+      isPaused = !isPaused;
+      document.getElementById('btn-pause-toggle').textContent = isPaused ? "再開" : "一時停止";
+      if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = !isPaused && isMicOn);
+      log(`Stream paused: ${isPaused}`);
+    });
+
+    // 4. 配信開始 / 切断
+    document.getElementById('btn-stream-toggle').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-stream-toggle');
+      if (isStreaming) {
+        if (pc) pc.close();
+        if (wsSignal) wsSignal.close();
+        isStreaming = false;
+        btn.textContent = "配信開始";
+        btn.className = "btn-primary";
+        document.getElementById('flow-status').textContent = "OFFLINE";
+        log("Streaming stopped.");
+        return;
+      }
+
+      if (!currentRoomKey) currentRoomKey = Math.floor(100000 + Math.random() * 900000).toString();
+      const wsUrl = document.getElementById('input-verymeta-addr').value;
+
+      try {
+        wsSignal = new WebSocket(wsUrl);
+        wsSignal.onopen = () => {
+          wsSignal.send(JSON.stringify({ type: 'host_register', key: currentRoomKey }));
+          log(`サーバー接続完了。キー [${currentRoomKey}] で待機中...`);
+        };
+
+        wsSignal.onmessage = async (msg) => {
+          const data = JSON.parse(msg.data);
+          if (data.type === 'join_request') {
+            const clientIp = data.clientIp || "不明";
+            if (confirm(`【接続リクエスト受信】\nIP: ${clientIp}\n承認しますか？`)) {
+              pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+              dataChannel = pc.createDataChannel("spatial");
+
+              localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+              const offer = await pc.createOffer();
+              await pc.setLocalDescription(offer);
+
+              pc.onicecandidate = (e) => {
+                if (!e.candidate) {
+                  wsSignal.send(JSON.stringify({ type: 'offer_approved', sdp: pc.localDescription }));
+                }
+              };
+            } else {
+              wsSignal.send(JSON.stringify({ type: 'rejected' }));
+            }
+          } else if (data.type === 'answer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+            document.getElementById('flow-status').textContent = "ONLINE (P2P)";
+            log("P2P Connection Established!");
+          }
+        };
+
+        isStreaming = true;
+        btn.textContent = "切断 (配信中)";
+        btn.className = "btn-danger";
+      } catch (e) {
+        alert("VERYMETAサーバーに接続できませんでした。");
+        log("WS Error: " + e.message);
+      }
+    });
+
+    // 5. 受信側：接続コードで接続
+    document.getElementById('btn-connect-recv').addEventListener('click', () => {
+      const key = document.getElementById('input-viewkey').value.trim();
+      const wsUrl = document.getElementById('input-verymeta-addr').value;
+
+      if (!key) return alert("接続コード(viwekey)を入力してクレメンス！");
+
+      const ws = new WebSocket(wsUrl);
+      ws.onopen = () => {
+        log(`VERYMETAサーバー接続完了。キー [${key}] でホストを検索中...`);
+        ws.send(JSON.stringify({ type: 'join_request', key: key }));
+      };
+
+      pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      pc.ondatachannel = (e) => {
+        e.channel.onmessage = (msg) => {
+          const pos = JSON.parse(msg.data);
+          updateAudioPosition(pos.x, pos.z);
+        };
+      };
+      pc.ontrack = (e) => {
+        const source = audioCtx.createMediaStreamSource(e.streams[0]);
+        source.connect(masterGain);
+        masterGain.connect(panner);
+        panner.connect(audioCtx.destination);
+      };
+
+      ws.onmessage = async (msg) => {
+        const data = JSON.parse(msg.data);
+        if (data.type === 'offer_approved') {
+          await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          pc.onicecandidate = (e) => {
+            if (!e.candidate) ws.send(JSON.stringify({ type: 'answer', sdp: pc.localDescription }));
+          };
+          log("ホストの承認を確認。P2P通信を開通中...");
+        } else if (data.type === 'rejected') {
+          alert("リクエストが拒否されたゾ。");
+        } else if (data.type === 'error') {
+          alert(data.message);
+        }
+      };
+    });
+
+    // 6. 受信側：スピーカーミュート ＆ 切断
+    let isSpkMuted = false;
+    document.getElementById('btn-spk-mute').addEventListener('click', () => {
+      isSpkMuted = !isSpkMuted;
+      masterGain.gain.setValueAtTime(isSpkMuted ? 0 : document.getElementById('range-volume').value, audioCtx.currentTime);
+      document.getElementById('btn-spk-mute').textContent = isSpkMuted ? "スピーカー Unmute" : "スピーカー Mute";
+    });
+
+    document.getElementById('btn-disconnect').addEventListener('click', () => {
+      if (pc) pc.close();
+      alert("切断したゾ！");
+      log("Disconnected.");
+    });
+
+    // 7. QuickAccent
+    document.getElementById('file-quickaccent').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          audioCtx.decodeAudioData(ev.target.result, (buf) => {
+            quickAccentBuffer = buf;
+            log("QuickAccent mp3 Loaded.");
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    });
+
+    document.getElementById('btn-play-accent').addEventListener('click', () => {
+      if (quickAccentBuffer) {
+        const src = audioCtx.createBufferSource();
+        src.buffer = quickAccentBuffer;
+        src.connect(inputGain);
+        src.start(0);
+        log("QuickAccent Played.");
+      } else {
+        alert("先にmp3ファイルをアップロードしてクレメンス！");
+      }
+    });
+
+    // 8. パラメーター連動
+    document.getElementById('range-gain').addEventListener('input', (e) => inputGain.gain.value = e.target.value);
+    document.getElementById('range-volume').addEventListener('input', (e) => {
+      if (!isSpkMuted) masterGain.gain.value = e.target.value;
+    });
+    document.getElementById('range-echo').addEventListener('input', (e) => echoFeedback.gain.value = e.target.value);
+
+    // --- UI制御 ---
+    const tabSend = document.getElementById('tab-send'), tabRecv = document.getElementById('tab-recv');
+    const viewSend = document.getElementById('view-send'), viewRecv = document.getElementById('view-recv');
+    const footerSend = document.getElementById('footer-send'), footerRecv = document.getElementById('footer-recv');
+
+    tabSend.addEventListener('click', () => {
+      tabSend.className = 'tab-btn active'; tabRecv.className = 'tab-btn';
+      viewSend.className = 'view-section active'; viewRecv.className = 'view-section';
+      footerSend.className = 'footer-group active'; footerRecv.className = 'footer-group';
+    });
+
+    tabRecv.addEventListener('click', () => {
+      tabRecv.className = 'tab-btn active'; tabSend.className = 'tab-btn';
+      viewRecv.className = 'view-section active'; viewSend.className = 'view-section';
+      footerRecv.className = 'footer-group active'; footerRecv.className = 'footer-group';
+    });
+
+    // 詳細設定パネル
+    const settingsPanel = document.getElementById('settings-panel');
+    document.getElementById('btn-set').addEventListener('click', () => settingsPanel.classList.add('show'));
+    document.getElementById('btn-set-recv').addEventListener('click', () => settingsPanel.classList.add('show'));
+    document.getElementById('close-panel-btn').addEventListener('click', () => settingsPanel.classList.remove('show'));
+  </script>
+</body>
+</html>
