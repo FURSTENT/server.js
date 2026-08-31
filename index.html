@@ -693,15 +693,25 @@
     const footerSend = document.getElementById('footer-send'), footerRecv = document.getElementById('footer-recv');
 
     tabSend.addEventListener('click', () => {
-      tabSend.classList.add('active'); tabRecv.classList.remove('active');
-      viewSend.classList.add('active'); viewRecv.classList.remove('active');
-      footerSend.classList.add('active'); footerRecv.classList.remove('active');
+      tabSend.classList.add('active'); 
+      tabRecv.classList.remove('active');
+      viewSend.classList.add('active'); 
+      viewRecv.classList.remove('active');
+      
+      // フッターの表示を強制切替
+      footerSend.style.display = 'flex';
+      footerRecv.style.display = 'none';
     });
 
     tabRecv.addEventListener('click', () => {
-      tabRecv.classList.add('active'); tabSend.classList.remove('active');
-      viewRecv.classList.add('active'); viewSend.classList.remove('active');
-      footerRecv.classList.add('active'); footerSend.classList.remove('active');
+      tabRecv.classList.add('active'); 
+      tabSend.classList.remove('active');
+      viewRecv.classList.add('active'); 
+      viewSend.classList.remove('active');
+      
+      // フッターの表示を強制切替
+      footerSend.style.display = 'none';
+      footerRecv.style.display = 'flex';
     });
 
     // 詳細設定パネル
